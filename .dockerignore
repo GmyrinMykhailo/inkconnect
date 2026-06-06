@@ -1,0 +1,17 @@
+.git
+.gocache
+.gomodcache
+.gopath
+**\*.log
+**\*.tmp
+**\*.backup
+**\*.bak
+.env
+flutter_client\.dart_tool
+flutter_client\build
+flutter_client\.idea
+flutter_client\android\.gradle
+flutter_client\android\local.properties
+flutter_client\android-run-out.log
+flutter_client\android-run-err.log
+inkconnect-api.exe

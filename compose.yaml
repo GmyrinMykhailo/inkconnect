@@ -1,0 +1,100 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: inkconnect-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: inkconnect
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Magl2016
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d inkconnect"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    container_name: inkconnect-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: ${S3_ACCESS_KEY:-inkconnect}
+      MINIO_ROOT_PASSWORD: ${S3_SECRET_KEY:-inkconnect_minio_dev_password}
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/ready"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  minio-init:
+    image: minio/mc:latest
+    container_name: inkconnect-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-inkconnect}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-inkconnect_minio_dev_password}
+      S3_BUCKET: ${S3_BUCKET:-inkconnect-files}
+    entrypoint: >
+      /bin/sh -c "mc alias set inkconnect http://minio:9000 \"$${S3_ACCESS_KEY}\" \"$${S3_SECRET_KEY}\" &&
+      mc mb --ignore-existing \"inkconnect/$${S3_BUCKET}\""
+    restart: "no"
+
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: inkconnect-backend
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      APP_ADDR: :18080
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_DB: inkconnect
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: Magl2016
+      POSTGRES_SSLMODE: disable
+      SIGNING_KEY_ENCRYPTION_KEY: ${SIGNING_KEY_ENCRYPTION_KEY:-MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=}
+      SIGNING_KEY_ENCRYPTION_KEY_ID: ${SIGNING_KEY_ENCRYPTION_KEY_ID:-local-dev-key-1}
+      S3_ENABLED: ${S3_ENABLED:-true}
+      S3_ENDPOINT: ${S3_ENDPOINT:-minio:9000}
+      S3_PUBLIC_ENDPOINT: ${S3_PUBLIC_ENDPOINT:-http://127.0.0.1:9000}
+      S3_BUCKET: ${S3_BUCKET:-inkconnect-files}
+      S3_REGION: ${S3_REGION:-us-east-1}
+      S3_ACCESS_KEY: ${S3_ACCESS_KEY:-inkconnect}
+      S3_SECRET_KEY: ${S3_SECRET_KEY:-inkconnect_minio_dev_password}
+      S3_USE_SSL: ${S3_USE_SSL:-false}
+    ports:
+      - "18080:18080"
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: inkconnect-web
+    restart: unless-stopped
+    depends_on:
+      backend:
+        condition: service_started
+    ports:
+      - "8088:80"
+
+volumes:
+  postgres_data:
+  minio_data:
