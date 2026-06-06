@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="auth-shell">
+    <main class="single-card-layout">
+        <section class="panel-card panel-card-wide">
+            <div class="panel-head centered">
+                <span class="eyebrow">InkConnect</span>
+                <h1 class="form-title">Регистрация</h1>
+                <p class="subtle form-subtitle">Создайте аккаунт клиента или мастера.</p>
+            </div>
+
+            {{if .Error}}
+            <div class="alert error">{{.Error}}</div>
+            {{end}}
+
+            <form method="post" action="/register" class="auth-form" novalidate data-register-form>
+                <label>
+                    <span>Ник</span>
+                    <input type="text" name="username" value="{{index .FormValues "username"}}" placeholder="user.name" maxlength="128" autocapitalize="none" autocomplete="username" spellcheck="false" data-username-input required>
+                    <small class="field-note">Публичное имя, по которому другие пользователи смогут вас находить.</small>
+                    <small class="field-note username-note" data-username-note></small>
+                </label>
+
+                <div class="grid three">
+                    <label>
+                        <span>Фамилия</span>
+                        <input type="text" name="last_name" value="{{index .FormValues "last_name"}}" placeholder="Смирнов" pattern="[A-Za-zА-Яа-яЁё\s\-]+" title="Только русские или английские буквы, пробел и дефис" maxlength="128" data-name-input required>
+                    </label>
+                    <label>
+                        <span>Имя</span>
+                        <input type="text" name="first_name" value="{{index .FormValues "first_name"}}" placeholder="Илья" pattern="[A-Za-zА-Яа-яЁё\s\-]+" title="Только русские или английские буквы, пробел и дефис" maxlength="128" data-name-input required>
+                    </label>
+                    <label>
+                        <span>Отчество</span>
+                        <input type="text" name="middle_name" value="{{index .FormValues "middle_name"}}" placeholder="Андреевич" pattern="[A-Za-zА-Яа-яЁё\s\-]*" title="Только русские или английские буквы, пробел и дефис" maxlength="128" data-name-input>
+                    </label>
+                </div>
+
+                <p class="field-note inline-note">ФИО обязательно для регистрации, но это приватные данные. Они не показываются публично другим пользователям.</p>
+
+                <div class="grid two form-columns">
+                    <div class="field-stack">
+                        <label>
+                            <span>Email</span>
+                            <input type="email" name="email" value="{{index .FormValues "email"}}" placeholder="user.name+tag@gmail.com" maxlength="254" autocapitalize="none" autocomplete="email" spellcheck="false" inputmode="email" title="Допустимы только латинские буквы, цифры и символы . _ % + -" data-email-input required>
+                        </label>
+
+                        <label>
+                            <span>Телефон</span>
+                            <div class="phone-field">
+                                <span class="phone-prefix">+7</span>
+                                <input type="tel" name="phone" value="{{index .FormValues "phone"}}" placeholder="(999) 999-99-99" inputmode="numeric" autocomplete="tel-national" maxlength="18" data-phone-input required>
+                            </div>
+                            <small class="field-note">Телефон обязателен, но это приватные данные. Он не показывается публично другим пользователям.</small>
+                        </label>
+                    </div>
+
+                    <div class="field-stack">
+                        <label>
+                            <span>Пароль</span>
+                            <input type="password" name="password" placeholder="Минимум 10 символов, буквы, цифры и спецсимвол" minlength="10" maxlength="128" autocomplete="new-password" data-password required>
+                        </label>
+
+                        <label>
+                            <span>Подтверждение пароля</span>
+                            <input type="password" name="password_confirm" placeholder="Повторите пароль" minlength="10" maxlength="128" autocomplete="new-password" data-password-confirm required>
+                        </label>
+                    </div>
+                </div>
+
+                <div class="grid two role-city-grid">
+                    <label>
+                        <span>Роль</span>
+                        <select name="role" data-role-select required>
+                            <option value="client" {{if eq (index .FormValues "role") "client"}}selected{{end}}>Клиент</option>
+                            <option value="master" {{if eq (index .FormValues "role") "master"}}selected{{end}}>Мастер</option>
+                        </select>
+                    </label>
+
+                    <div class="field-stack city-stack">
+                        <label>
+                            <span>Город</span>
+                            <input type="text" name="city" value="{{index .FormValues "city"}}" placeholder="Москва" pattern="[А-Яа-яЁё\s\-]+" title="Только русские буквы, пробел и дефис" maxlength="128" data-city-input required>
+                        </label>
+
+                        <label class="checkbox city-visibility">
+                            <input type="checkbox" name="show_city_in_profile" {{if eq (index .FormValues "show_city_in_profile") "on"}}checked{{end}} data-city-visibility>
+                            <span>Показывать город в профиле</span>
+                        </label>
+                    </div>
+                </div>
+
+                <label>
+                    <span>О себе</span>
+                    <div class="bio-field">
+                        <textarea name="bio" rows="5" placeholder="Краткая информация о пользователе" maxlength="150" data-bio-input>{{index .FormValues "bio"}}</textarea>
+                        <div class="bio-counter" aria-live="polite">
+                            <span data-bio-count>0</span>
+                            <span>/ 150</span>
+                        </div>
+                    </div>
+                </label>
+
+                <label class="master-only {{if ne (index .FormValues "role") "master"}}is-hidden{{end}}" data-master-field>
+                    <span>Студия или рабочее имя мастера</span>
+                    <input type="text" name="studio_name" value="{{index .FormValues "studio_name"}}" placeholder="Только для мастеров">
+                </label>
+
+                <div class="checkbox agreement-row">
+                    <input id="agreement_accepted" type="checkbox" name="agreement_accepted" {{if .Accepted}}checked{{end}} data-agreement-input required>
+                    <div class="agreement-copy">
+                        <span>
+                            Я принимаю
+                            <button type="button" class="agreement-link" data-open-agreement>пользовательское соглашение</button>
+                            и согласен на
+                            <button type="button" class="agreement-link" data-open-agreement>обработку персональных данных</button>
+                        </span>
+                    </div>
+                </div>
+
+                <button type="submit" class="primary-button" data-submit-button disabled>Зарегистрироваться</button>
+            </form>
+
+            <div class="form-footer">
+                <span>Уже зарегистрированы?</span>
+                <a href="/login">Войти в систему</a>
+            </div>
+        </section>
+    </main>
+
+    <div class="modal-backdrop" data-agreement-modal hidden>
+        <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="agreement-modal-title">
+            <div class="modal-header">
+                <h2 id="agreement-modal-title">Пользовательское соглашение</h2>
+                <button type="button" class="modal-close" data-close-agreement aria-label="Закрыть">×</button>
+            </div>
+            <div class="modal-body">
+                <iframe class="agreement-frame" src="/static/docs/user-agreement.html" title="Пользовательское соглашение и согласие на обработку персональных данных"></iframe>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            const form = document.querySelector('[data-register-form]');
+            const roleSelect = document.querySelector('[data-role-select]');
+            const masterField = document.querySelector('[data-master-field]');
+            const studioInput = masterField ? masterField.querySelector('input[name="studio_name"]') : null;
+            const phoneInput = document.querySelector('[data-phone-input]');
+            const bioInput = document.querySelector('[data-bio-input]');
+            const bioCount = document.querySelector('[data-bio-count]');
+            const passwordInput = document.querySelector('[data-password]');
+            const passwordConfirmInput = document.querySelector('[data-password-confirm]');
+            const emailInput = form ? form.querySelector('[data-email-input]') : null;
+            const usernameInput = form ? form.querySelector('[data-username-input]') : null;
+            const usernameNote = form ? form.querySelector('[data-username-note]') : null;
+            const agreementInput = form ? form.querySelector('[data-agreement-input]') : null;
+            const agreementOpenButtons = form ? Array.from(form.querySelectorAll('[data-open-agreement]')) : [];
+            const agreementModal = document.querySelector('[data-agreement-modal]');
+            const agreementCloseButton = document.querySelector('[data-close-agreement]');
+            const submitButton = form ? form.querySelector('[data-submit-button]') : null;
+            const cityInput = form ? form.querySelector('[data-city-input]') : null;
+            const nameInputs = form ? Array.from(form.querySelectorAll('[data-name-input]')) : [];
+
+            let usernameRequestId = 0;
+            let usernameAvailable = false;
+            let emailNote = null;
+            let phoneNote = null;
+            let passwordNote = null;
+            let passwordConfirmNote = null;
+
+            function createValidationNote(target, key) {
+                if (!target) {
+                    return null;
+                }
+
+                const note = document.createElement('small');
+                note.className = 'field-note validation-note';
+                note.hidden = true;
+                note.setAttribute('data-validation-note', key);
+                target.insertAdjacentElement('afterend', note);
+                return note;
+            }
+
+            function setValidationNote(note, message, isError) {
+                if (!note) {
+                    return;
+                }
+
+                note.textContent = message || '';
+                note.hidden = !message;
+                note.classList.toggle('is-error', Boolean(message) && isError);
+                note.classList.toggle('is-success', Boolean(message) && !isError);
+            }
+
+            function setUsernameNote(message, state) {
+                if (!usernameNote) {
+                    return;
+                }
+
+                usernameNote.textContent = message || '';
+                usernameNote.classList.toggle('is-error', state === 'error');
+                usernameNote.classList.toggle('is-success', state === 'success');
+            }
+
+            function syncMasterField() {
+                if (!roleSelect || !masterField || !studioInput) {
+                    return;
+                }
+
+                const isMaster = roleSelect.value === 'master';
+                masterField.classList.toggle('is-hidden', !isMaster);
+                studioInput.required = false;
+                studioInput.removeAttribute('required');
+
+                if (!isMaster) {
+                    studioInput.value = '';
+                    studioInput.setCustomValidity('');
+                }
+            }
+
+            function formatPhone(value) {
+                const digits = value.replace(/\D/g, '').replace(/^7/, '').slice(0, 10);
+                let formatted = '';
+
+                if (digits.length > 0) {
+                    formatted += '(' + digits.slice(0, 3);
+                }
+                if (digits.length >= 4) {
+                    formatted += ') ' + digits.slice(3, 6);
+                }
+                if (digits.length >= 7) {
+                    formatted += '-' + digits.slice(6, 8);
+                }
+                if (digits.length >= 9) {
+                    formatted += '-' + digits.slice(8, 10);
+                }
+
+                return formatted;
+            }
+
+            function validatePhone() {
+                if (!phoneInput) {
+                    return true;
+                }
+
+                const digits = phoneInput.value.replace(/\D/g, '');
+                const valid = digits.length === 10;
+                phoneInput.setCustomValidity(valid ? '' : 'Телефон должен содержать 10 цифр после +7.');
+
+                if (!phoneInput.value) {
+                    setValidationNote(phoneNote, '', true);
+                } else if (valid) {
+                    setValidationNote(phoneNote, '', false);
+                } else {
+                    setValidationNote(phoneNote, 'Введите полный номер: после +7 нужно 10 цифр.', true);
+                }
+
+                return valid;
+            }
+
+            function filterEmailInput(value) {
+                return value.toLowerCase().replace(/[^a-z0-9._%+\-@]/g, '');
+            }
+
+            function filterUsernameInput(value) {
+                return value.replace(/[^A-Za-z0-9._-]/g, '');
+            }
+
+            function filterCityInput(value) {
+                return value.replace(/[^А-Яа-яЁё\s\-]/g, '');
+            }
+
+            function detectNameScript(value) {
+                if (/[A-Za-z]/.test(value)) {
+                    return 'latin';
+                }
+                if (/[А-Яа-яЁё]/.test(value)) {
+                    return 'cyrillic';
+                }
+
+                return '';
+            }
+
+            function currentNameScript() {
+                for (const input of nameInputs) {
+                    const script = detectNameScript(input.value);
+                    if (script) {
+                        return script;
+                    }
+                }
+
+                return '';
+            }
+
+            function filterNameByScript(value, script) {
+                if (script === 'latin') {
+                    return value.replace(/[^A-Za-z\s\-]/g, '');
+                }
+                if (script === 'cyrillic') {
+                    return value.replace(/[^А-Яа-яЁё\s\-]/g, '');
+                }
+
+                return value.replace(/[^A-Za-zА-Яа-яЁё\s\-]/g, '');
+            }
+
+            function validateNameInputs() {
+                const script = currentNameScript();
+                let valid = true;
+
+                nameInputs.forEach(function (input) {
+                    input.setCustomValidity('');
+                    input.value = filterNameByScript(input.value, script);
+
+                    if (!script || !input.value) {
+                        return;
+                    }
+
+                    if (detectNameScript(input.value) !== script) {
+                        input.setCustomValidity('Все поля ФИО должны быть заполнены в одной раскладке: только кириллица или только латиница.');
+                        valid = false;
+                    }
+                });
+
+                return valid;
+            }
+
+            function validatePassword() {
+                if (!passwordInput) {
+                    return true;
+                }
+
+                const value = passwordInput.value;
+                const hasLetter = /[A-Za-zА-Яа-яЁё]/.test(value);
+                const hasDigit = /\d/.test(value);
+                const hasSpecial = /[^A-Za-zА-Яа-яЁё\d\s]/.test(value);
+                const valid = value.length >= 10 && hasLetter && hasDigit && hasSpecial;
+
+                passwordInput.setCustomValidity(valid ? '' : 'Пароль должен содержать минимум 10 символов, буквы, цифры и спецсимвол.');
+
+                if (!value) {
+                    setValidationNote(passwordNote, '', true);
+                } else if (valid) {
+                    setValidationNote(passwordNote, '', false);
+                } else {
+                    setValidationNote(passwordNote, 'Пароль: минимум 10 символов, буквы, цифры и спецсимвол.', true);
+                }
+
+                return valid;
+            }
+
+            function validatePasswordConfirmation() {
+                if (!passwordConfirmInput || !passwordInput) {
+                    return true;
+                }
+
+                const value = passwordConfirmInput.value;
+                const hasLetter = /[A-Za-zА-Яа-яЁё]/.test(value);
+                const hasDigit = /\d/.test(value);
+                const hasSpecial = /[^A-Za-zА-Яа-яЁё\d\s]/.test(value);
+                const strongEnough = value.length >= 10 && hasLetter && hasDigit && hasSpecial;
+
+                if (!strongEnough) {
+                    passwordConfirmInput.setCustomValidity('Подтверждение пароля должно содержать минимум 10 символов, буквы, цифры и спецсимвол.');
+                    setValidationNote(passwordConfirmNote, value ? 'Подтверждение пароля должно быть не короче 10 символов и содержать буквы, цифры и спецсимвол.' : '', true);
+                    return false;
+                }
+
+                if (passwordInput.value !== value) {
+                    passwordConfirmInput.setCustomValidity('Пароли должны совпадать.');
+                    setValidationNote(passwordConfirmNote, 'Пароли не совпадают.', true);
+                    return false;
+                }
+
+                passwordConfirmInput.setCustomValidity('');
+                setValidationNote(passwordConfirmNote, value ? 'Пароли совпадают.' : '', false);
+                return true;
+            }
+
+            function validateEmail() {
+                if (!emailInput) {
+                    return true;
+                }
+
+                const value = emailInput.value;
+                const hasSpaces = /\s/.test(value);
+                const atMatches = value.match(/@/g) || [];
+                const parts = value.split('@');
+                let valid = !hasSpaces && atMatches.length === 1;
+
+                if (valid) {
+                    const localPart = parts[0];
+                    const domainPart = parts[1];
+                    const dotIndex = domainPart.lastIndexOf('.');
+                    const emailPattern = /^[a-z0-9._%+\-]+@[a-z0-9\-]+(\.[a-z0-9\-]+)+$/;
+                    valid = localPart.length >= 1 && dotIndex >= 1 && (domainPart.length - dotIndex - 1) >= 2 && emailPattern.test(value);
+                }
+
+                emailInput.setCustomValidity(valid ? '' : 'Введите корректный email в латинице.');
+
+                if (!value) {
+                    setValidationNote(emailNote, '', true);
+                } else if (valid) {
+                    setValidationNote(emailNote, '', false);
+                } else {
+                    setValidationNote(emailNote, 'Введите корректный email в латинице, например name@example.com.', true);
+                }
+
+                return valid;
+            }
+
+            async function validateUsernameAvailability() {
+                if (!usernameInput) {
+                    return true;
+                }
+
+                const username = usernameInput.value;
+                const formatValid = username.length > 0 && /^[A-Za-z0-9._-]+$/.test(username);
+
+                if (!formatValid) {
+                    usernameAvailable = false;
+                    usernameInput.setCustomValidity('Ник может содержать только латинские буквы, цифры и символы . _ -');
+                    setUsernameNote(username.length > 0 ? 'Используйте только латинские буквы, цифры и символы . _ -' : '', username.length > 0 ? 'error' : '');
+                    return false;
+                }
+
+                const requestId = ++usernameRequestId;
+                setUsernameNote('Проверяем доступность никнейма...', '');
+
+                try {
+                    const response = await fetch('/api/v1/auth/check-username?username=' + encodeURIComponent(username), {
+                        method: 'GET',
+                        headers: { 'Accept': 'application/json' }
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('request failed');
+                    }
+
+                    const data = await response.json();
+                    if (requestId !== usernameRequestId) {
+                        return usernameAvailable;
+                    }
+
+                    usernameAvailable = Boolean(data.available);
+                    usernameInput.setCustomValidity(usernameAvailable ? '' : 'Этот никнейм уже занят.');
+                    setUsernameNote(usernameAvailable ? 'Никнейм свободен.' : 'Этот никнейм уже занят.', usernameAvailable ? 'success' : 'error');
+                    return usernameAvailable;
+                } catch (error) {
+                    if (requestId !== usernameRequestId) {
+                        return usernameAvailable;
+                    }
+
+                    usernameAvailable = false;
+                    usernameInput.setCustomValidity('Не удалось проверить никнейм. Попробуйте ещё раз.');
+                    setUsernameNote('Не удалось проверить никнейм. Попробуйте ещё раз.', 'error');
+                    return false;
+                }
+            }
+
+            function updateBioCount() {
+                if (!bioInput || !bioCount) {
+                    return;
+                }
+
+                bioCount.textContent = String(bioInput.value.length);
+            }
+
+            function markRequiredLabels() {
+                if (!form) {
+                    return;
+                }
+
+                form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (field) {
+                    const label = field.closest('label');
+                    const text = label ? label.querySelector('span') : null;
+                    if (text && !text.textContent.trim().endsWith('*')) {
+                        text.textContent = text.textContent.trim() + ' *';
+                    }
+                });
+            }
+
+            function openAgreementModal(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                if (!agreementModal) {
+                    return;
+                }
+
+                agreementModal.hidden = false;
+                document.body.style.overflow = 'hidden';
+            }
+
+            function closeAgreementModal(event) {
+                if (event) {
+                    event.preventDefault();
+                    event.stopPropagation();
+                }
+
+                if (!agreementModal) {
+                    return;
+                }
+
+                agreementModal.hidden = true;
+                document.body.style.overflow = '';
+            }
+
+            function updateSubmitState() {
+                if (!form || !submitButton) {
+                    return;
+                }
+
+                const valid =
+                    usernameAvailable &&
+                    validateNameInputs() &&
+                    validateEmail() &&
+                    validatePhone() &&
+                    validatePassword() &&
+                    validatePasswordConfirmation() &&
+                    form.checkValidity() &&
+                    (!agreementInput || agreementInput.checked);
+
+                submitButton.disabled = !valid;
+            }
+
+            if (roleSelect) {
+                roleSelect.addEventListener('change', function () {
+                    syncMasterField();
+                    updateSubmitState();
+                });
+                syncMasterField();
+            }
+
+            if (phoneInput) {
+                phoneInput.addEventListener('input', function () {
+                    phoneInput.value = formatPhone(phoneInput.value);
+                    validatePhone();
+                    updateSubmitState();
+                });
+                phoneInput.value = formatPhone(phoneInput.value);
+            }
+
+            if (usernameInput) {
+                usernameInput.addEventListener('input', function () {
+                    usernameInput.value = filterUsernameInput(usernameInput.value);
+                    usernameAvailable = false;
+                    usernameInput.setCustomValidity('');
+                    setUsernameNote('', '');
+                    updateSubmitState();
+                });
+
+                usernameInput.addEventListener('blur', async function () {
+                    await validateUsernameAvailability();
+                    updateSubmitState();
+                });
+            }
+
+            nameInputs.forEach(function (input) {
+                input.addEventListener('input', function () {
+                    input.value = filterNameByScript(input.value, currentNameScript());
+                    validateNameInputs();
+                    updateSubmitState();
+                });
+            });
+
+            if (cityInput) {
+                cityInput.addEventListener('input', function () {
+                    cityInput.value = filterCityInput(cityInput.value);
+                    updateSubmitState();
+                });
+            }
+
+            if (bioInput) {
+                bioInput.addEventListener('input', updateBioCount);
+                updateBioCount();
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function () {
+                    validatePassword();
+                    validatePasswordConfirmation();
+                    updateSubmitState();
+                });
+            }
+
+            if (passwordConfirmInput) {
+                passwordConfirmInput.addEventListener('input', function () {
+                    validatePasswordConfirmation();
+                    updateSubmitState();
+                });
+            }
+
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    emailInput.value = filterEmailInput(emailInput.value);
+                    validateEmail();
+                    updateSubmitState();
+                });
+            }
+
+            if (agreementInput) {
+                agreementInput.addEventListener('change', updateSubmitState);
+            }
+
+            agreementOpenButtons.forEach(function (button) {
+                button.addEventListener('click', openAgreementModal);
+            });
+
+            if (agreementCloseButton) {
+                agreementCloseButton.addEventListener('click', closeAgreementModal);
+            }
+
+            if (agreementModal) {
+                agreementModal.addEventListener('click', function (event) {
+                    if (event.target === agreementModal) {
+                        closeAgreementModal();
+                    }
+                });
+            }
+
+            document.addEventListener('keydown', function (event) {
+                if (event.key === 'Escape' && agreementModal && !agreementModal.hidden) {
+                    closeAgreementModal();
+                }
+            });
+
+            if (form) {
+                emailNote = createValidationNote(emailInput, 'email');
+                phoneNote = createValidationNote(phoneInput ? phoneInput.closest('.phone-field') : null, 'phone');
+                passwordNote = createValidationNote(passwordInput, 'password');
+                passwordConfirmNote = createValidationNote(passwordConfirmInput, 'password-confirm');
+
+                form.addEventListener('input', updateSubmitState);
+                form.addEventListener('submit', async function (event) {
+                    const usernameOk = await validateUsernameAvailability();
+                    validateNameInputs();
+                    updateSubmitState();
+
+                    if (!usernameOk || (submitButton && submitButton.disabled)) {
+                        event.preventDefault();
+                        form.reportValidity();
+                    }
+                });
+            }
+
+            markRequiredLabels();
+            validateNameInputs();
+            validateEmail();
+            validatePhone();
+            validatePassword();
+            validatePasswordConfirmation();
+            updateSubmitState();
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="success-shell">
+    <main class="success-layout">
+        <section class="success-card">
+            <span class="badge success">Аккаунт создан</span>
+            <h1>Регистрация прошла успешно</h1>
+            <p class="lead">
+                Профиль сохранен в базе данных. Ключ защищенного журнала создан автоматически
+                и будет использоваться системой для фиксации важных действий в журнале ухода.
+            </p>
+
+            <div class="success-grid">
+                <article>
+                    <h2>Данные профиля</h2>
+                    <dl>
+                        <dt>ID пользователя</dt>
+                        <dd>{{.Success.UserID}}</dd>
+
+                        <dt>Username</dt>
+                        <dd>{{.Success.Username}}</dd>
+
+                        <dt>Email</dt>
+                        <dd>{{.Success.Email}}</dd>
+
+                        <dt>Роль</dt>
+                        <dd>{{.Success.Role}}</dd>
+                    </dl>
+                </article>
+
+                <article>
+                    <h2>Защищенный журнал</h2>
+                    <p>
+                        Ничего сохранять вручную не нужно: ключи защищенного журнала
+                        подготовлены системой и не отображаются в интерфейсе.
+                    </p>
+                </article>
+            </div>
+
+            <div class="actions actions-inline">
+                <a href="/login" class="primary-button">Перейти ко входу</a>
+                <a href="/register" class="secondary-button">Создать еще один аккаунт</a>
+            </div>
+        </section>
+    </main>
+</body>
+</html>

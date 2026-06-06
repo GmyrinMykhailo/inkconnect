@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="success-shell">
+    <main class="success-layout">
+        <section class="success-card">
+            <span class="badge success">Сессия активна</span>
+            <h1>Вы вошли в InkConnect</h1>
+            <p class="lead">
+                Это базовая защищенная зона пользователя. На следующих этапах сюда
+                будут добавлены каталог мастеров, записи на процедуры и журнал ухода.
+            </p>
+
+            <div class="success-grid">
+                <article>
+                    <h2>Профиль</h2>
+                    <dl>
+                        <dt>ID пользователя</dt>
+                        <dd>{{.User.ID}}</dd>
+
+                        <dt>Username</dt>
+                        <dd>{{.User.Username}}</dd>
+
+                        {{if and (eq .User.Role "master") .User.StudioName}}
+                        <dt>Публичное имя мастера</dt>
+                        <dd>{{.User.StudioName}}</dd>
+                        {{end}}
+
+                        <dt>Email</dt>
+                        <dd>{{.User.Email}}</dd>
+                    </dl>
+                </article>
+
+                <article>
+                    <h2>Доступ</h2>
+                    <dl>
+                        <dt>Роль</dt>
+                        <dd>{{.User.Role}}</dd>
+
+                        <dt>Публичный ключ</dt>
+                        <dd class="mono">{{.User.PublicKey}}</dd>
+                    </dl>
+                </article>
+            </div>
+
+            <form action="/logout" method="post" class="actions">
+                <button type="submit" class="secondary-button">Выйти</button>
+            </form>
+        </section>
+    </main>
+</body>
+</html>

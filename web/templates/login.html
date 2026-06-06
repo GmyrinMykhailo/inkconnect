@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{.Title}}</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body class="auth-shell">
+    <main class="single-card-layout single-card-layout-narrow">
+        <section class="panel-card panel-card-wide">
+            <div class="panel-head centered">
+                <span class="eyebrow">InkConnect</span>
+                <h1 class="form-title">Вход</h1>
+                <p class="subtle form-subtitle">Введите email и пароль для входа в систему.</p>
+            </div>
+
+            {{if .Error}}
+            <div class="alert error">{{.Error}}</div>
+            {{end}}
+
+            <form method="post" action="/login" class="auth-form" novalidate data-login-form>
+                <label>
+                    <span>Email</span>
+                    <input type="email" name="email" value="{{index .FormValues "email"}}" placeholder="you@example.com" maxlength="254" autocapitalize="none" autocomplete="email" spellcheck="false" inputmode="email" title="Допустимы только латинские буквы, цифры и символы . _ % + -" data-email-input required>
+                </label>
+
+                <label>
+                    <span>Пароль</span>
+                    <input type="password" name="password" placeholder="Введите пароль" maxlength="128" autocomplete="current-password" data-password-input required>
+                </label>
+
+                <button type="submit" class="primary-button" data-submit-button disabled>Войти</button>
+            </form>
+
+            <div class="form-footer">
+                <span>Нет аккаунта?</span>
+                <a href="/register">Создать учетную запись</a>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        (function () {
+            const form = document.querySelector('[data-login-form]');
+            const emailInput = form ? form.querySelector('[data-email-input]') : null;
+            const passwordInput = form ? form.querySelector('[data-password-input]') : null;
+            const submitButton = form ? form.querySelector('[data-submit-button]') : null;
+
+            let emailNote = null;
+            let passwordNote = null;
+
+            function createValidationNote(target, key) {
+                if (!target) {
+                    return null;
+                }
+
+                const note = document.createElement('small');
+                note.className = 'field-note validation-note';
+                note.hidden = true;
+                note.setAttribute('data-validation-note', key);
+                target.insertAdjacentElement('afterend', note);
+                return note;
+            }
+
+            function setValidationNote(note, message, isError) {
+                if (!note) {
+                    return;
+                }
+
+                note.textContent = message || '';
+                note.hidden = !message;
+                note.classList.toggle('is-error', Boolean(message) && isError);
+                note.classList.toggle('is-success', Boolean(message) && !isError);
+            }
+
+            function filterEmailInput(value) {
+                return value.toLowerCase().replace(/[^a-z0-9._%+\-@]/g, '');
+            }
+
+            function validateEmail() {
+                if (!emailInput) {
+                    return true;
+                }
+
+                const value = emailInput.value;
+                const hasSpaces = /\s/.test(value);
+                const atMatches = value.match(/@/g) || [];
+                const parts = value.split('@');
+                let valid = !hasSpaces && atMatches.length === 1;
+
+                if (valid) {
+                    const localPart = parts[0];
+                    const domainPart = parts[1];
+                    const dotIndex = domainPart.lastIndexOf('.');
+                    const emailPattern = /^[a-z0-9._%+\-]+@[a-z0-9\-]+(\.[a-z0-9\-]+)+$/;
+                    valid = localPart.length >= 1 && dotIndex >= 1 && (domainPart.length - dotIndex - 1) >= 2 && emailPattern.test(value);
+                }
+
+                emailInput.setCustomValidity(valid ? '' : 'Введите корректный email в латинице.');
+
+                if (!value) {
+                    setValidationNote(emailNote, '', true);
+                } else if (valid) {
+                    setValidationNote(emailNote, '', false);
+                } else {
+                    setValidationNote(emailNote, 'Введите корректный email в латинице, например name@example.com.', true);
+                }
+
+                return valid;
+            }
+
+            function validatePassword() {
+                if (!passwordInput) {
+                    return true;
+                }
+
+                const hasValue = passwordInput.value.length > 0;
+                passwordInput.setCustomValidity('');
+                setValidationNote(passwordNote, '', true);
+                return hasValue;
+            }
+
+            function markRequiredLabels() {
+                if (!form) {
+                    return;
+                }
+
+                form.querySelectorAll('input[required], select[required], textarea[required]').forEach(function (field) {
+                    const label = field.closest('label');
+                    const text = label ? label.querySelector('span') : null;
+                    if (text && !text.textContent.trim().endsWith('*')) {
+                        text.textContent = text.textContent.trim() + ' *';
+                    }
+                });
+            }
+
+            function updateSubmitState() {
+                if (!form || !submitButton) {
+                    return;
+                }
+
+                const valid = validateEmail() && validatePassword() && form.checkValidity();
+                submitButton.disabled = !valid;
+            }
+
+            if (emailInput) {
+                emailInput.addEventListener('input', function () {
+                    emailInput.value = filterEmailInput(emailInput.value);
+                    validateEmail();
+                    updateSubmitState();
+                });
+            }
+
+            if (passwordInput) {
+                passwordInput.addEventListener('input', function () {
+                    validatePassword();
+                    updateSubmitState();
+                });
+            }
+
+            if (form) {
+                emailNote = createValidationNote(emailInput, 'email');
+                passwordNote = createValidationNote(passwordInput, 'password');
+
+                form.addEventListener('input', updateSubmitState);
+                form.addEventListener('submit', function (event) {
+                    updateSubmitState();
+                    if (submitButton && submitButton.disabled) {
+                        event.preventDefault();
+                        form.reportValidity();
+                    }
+                });
+            }
+
+            markRequiredLabels();
+            validateEmail();
+            validatePassword();
+            updateSubmitState();
+        })();
+    </script>
+</body>
+</html>
